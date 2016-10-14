@@ -96,11 +96,11 @@ begin
   CloseFile(f);
 end;
 
-procedure SelectionSort(var arr: TArrInt);
+procedure SelectionSort(var arr: TArrInt; starti,finishi: Integer);
 var
   min,minj,i,j: Integer;
 begin
-  for i:= 0 to Length(arr) - 1 do
+  for i:= starti to finishi do
   begin
     min:= 2147483647;
     for j:= Length(arr) - 1 - i downto 0 do
@@ -115,11 +115,11 @@ begin
   end;
 end;
 
-procedure InsertionSort(var arr: TArrInt);
+procedure InsertionSort(var arr: TArrInt; starti,finishi: Integer);
 var
   i,tmpi,tmp: Integer;
 begin
-  for i:= 0 to Length(arr)-1 do
+  for i:= starti to finishi do
   begin
     tmp:= arr[i];
     tmpi:= i;
@@ -132,12 +132,12 @@ begin
   end;
 end;
 
-procedure BubbleSort(var arr: TArrInt);
+procedure BubbleSort(var arr: TArrInt; starti,finishi: Integer);
 var
   i,j,tmp: Integer;
 begin
-  for i:= 0 to Length(arr)-1 do
-   for j:= 0 to (Length(arr) - 1 - i) do
+  for i:= starti to finishi do
+   for j:= starti to finishi - i do
     if arr[j] < arr[j+1] then
     begin
       tmp:= arr[j];
@@ -175,13 +175,36 @@ begin
 end;
 
 procedure SortArr(tv: Integer; var arr: TArrInt);
+var
+  starttime,finishtime: TDateTime;
 begin
   case tv of
-  1: SelectionSort(arr);
-  2: InsertionSort(arr);
-  3: BubbleSort(arr);
-  4: QuickSort(arr,0,High(arr));
+  1:
+    begin
+      starttime:= Now;
+      SelectionSort(arr,0,High(arr));
+      finishtime:= Now;
+    end;
+  2:
+    begin
+      starttime:= Now;
+      InsertionSort(arr,0,High(arr));
+      finishtime:= Now;
+    end;
+  3:
+    begin
+      starttime:= Now;
+      BubbleSort(arr,0,High(arr));
+      finishtime:= Now;
+    end;
+  4:
+    begin
+      starttime:= Now;
+      QuickSort(arr,0,High(arr));
+      finishtime:= Now;
+    end;
   end;
+  Writeln('Time spent to sort the array: ',TimeToStr(finishtime - starttime));
   WriteToFile(arr);
 end;
 
@@ -208,11 +231,7 @@ begin
     case cv of
     0: Break;
     1: arr:= NumberSet();      //identical for all the types
-    2:
-      begin
-        SortArr(tv,arr);
-        Writeln('success!');
-      end;
+    2: SortArr(tv,arr);
     3: ShowArr(arr);            //identical for all the types
     4: Writeln(IsSorted(arr));  //identical for all the types
     end;
