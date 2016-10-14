@@ -204,7 +204,8 @@ begin
       finishtime:= Now;
     end;
   end;
-  Writeln('Time spent to sort the array: ',TimeToStr(finishtime - starttime));
+  Writeln('Time spent to sort the array: ');
+  Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
   WriteToFile(arr);
 end;
 
@@ -256,7 +257,7 @@ begin
       cv:= -1;
       separator(2);
       Writeln('0. Exit');
-      Writeln('1. ChoiceSort');
+      Writeln('1. SelectionSort');
       Writeln('2. InsertionsSort');
       Writeln('3. BubbleSort');
       Writeln('4. QuickSort');
