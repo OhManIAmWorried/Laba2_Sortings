@@ -43,10 +43,11 @@ begin
   Writeln;
 end;
 
-procedure CreateFile(cfcv: ShortInt; n: Integer);
+procedure CreateFile(cfcv: ShortInt; stepcv: Integer; n: Integer);
 var
   f: TFileInt;
-  i,rand: Integer;
+  i,j,rand: Integer;
+  arr: TArrInt;
 begin
   case cfcv of
   1: AssignFile(f,dirCustom);
@@ -54,13 +55,17 @@ begin
   end;
   Rewrite(f);
   Randomize;
+  SetLength(arr,n);
   for i:= 0 to n-1 do
   begin
     rand:= Random(2147483648);
     if Random(2) = 1 then
      rand:= rand * (-1);
-    Write(f,rand);
+    arr[i]:= rand;
   end;
+  for i:= 0 to stepcv - 1 do
+   for j:= 0 to n - 1 do
+    Write(f,arr[j]);
   CloseFile(f);
 end;
 
@@ -80,18 +85,6 @@ begin
    read(f,res[i]);
   CloseFile(f);
   Result:= res;
-end;
-
-function NumberSet(): TArrInt;
-var
-  n,i,rand: Integer;
-  res: TArrInt;
-  f: TFileInt;
-begin
-  write('The number of elements: ');
-  Readln(n);
-  CreateFile(1,n);
-  result:= ArrGet(1,n);
 end;
 
 function IsSorted(iscv:ShortInt; arr: TArrInt): Boolean;
@@ -164,13 +157,13 @@ procedure BubbleSort(var arr: TArrInt; starti,finishi: Integer);
 var
   i,j,tmp: Integer;
 begin
-  for i:= starti to finishi do
-   for j:= starti to finishi - i do
-    if arr[j] < arr[j+1] then
+  for i:= starti to finishi - 1 do
+   for j:= i + 1 to finishi do
+    if arr[j] > arr[i] then
     begin
       tmp:= arr[j];
-      arr[j]:= arr[j+1];
-      arr[j+1]:= tmp;
+      arr[j]:= arr[i];
+      arr[i]:= tmp;
     end;
 end;
 
@@ -224,7 +217,7 @@ begin
   Write('Length of array: ');
   Readln(n);
   separator(1);
-  CreateFile(1,n);
+  CreateFile(1,1,n);
   arr:= ArrGet(1,n);
   Writeln('Array created');
   separator(1);
@@ -261,7 +254,7 @@ begin
   separator(1);
   Write('Length of array: ');
   Readln(n);
-  CreateFile(1,n);
+  CreateFile(1,1,n);
   arr:= ArrGet(1,n);
   Writeln('Array created');
   separator(1);
@@ -299,14 +292,15 @@ begin
   end;
 end;
 
-procedure menuCustom(tv: Integer);
+procedure menuCustom(tv: ShortInt);
 var
   starttime,finishtime: TDateTime;
-  cv: Integer;
+  cv,n: Integer;
   f: TFileInt;
   arr: TArrInt;
 begin
   AssignFile(f,dirCustom);
+  n:= 0;
   while true do
   begin
     separator(2);
@@ -315,6 +309,7 @@ begin
     Writeln('2. Sort the array');
     Writeln('3. Show the array');
     Writeln('4. Is sorted');
+    Writeln('5. Change sorting type');
     separator(1);
     Write('Choice: ');
     Readln(cv);
@@ -322,18 +317,43 @@ begin
      separator(1);
     case cv of
     0: Break;
-    1: arr:= NumberSet();
-    2:
+    1:
       begin
-        starttime:= Now;
-        SortArr(tv,arr,0,High(arr));
-        finishtime:= Now;
-        Writeln('Time spent to sort the array: ');
-        Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
-        WriteToFile(1,arr);
+        write('The number of elements: ');
+        Readln(n);
+        CreateFile(1,1,n);
+        arr:= ArrGet(1,n);
       end;
-    3: ShowArr(arr);
-    4: Writeln(IsSorted(1,arr));
+    2: if n <> 0 then
+       begin
+         arr:= ArrGet(1,n);
+         starttime:= Now;
+         SortArr(tv,arr,0,High(arr));
+         finishtime:= Now;
+         Writeln('Time spent to sort the array: ');
+         Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
+       end;
+    3: if n <> 0 then
+        ShowArr(arr)
+       else
+        Writeln('Empty array');
+    4: if n <> 0 then
+        Writeln(IsSorted(1,arr))
+       else
+        Writeln('Empty array');
+    5:
+       begin
+         separator(2);
+         Writeln('1. Selection sort');
+         Writeln('2. Insertion sort');
+         Writeln('3. Bubble sort');
+         Writeln('4. Quick sort');
+         separator(1);
+         Write('Choice: ');
+         Readln(tv);
+         if n <> 0 then
+          arr:= ArrGet(1,n);
+       end;
     end;
   end;
 end;
@@ -342,55 +362,50 @@ procedure menuExperiments(tv: Integer);
 var
   arr: TArrInt;
   mecv: ShortInt;
-  step,starti: Integer;
   starttime,finishtime: TDateTime;
 begin
   while true do
   begin
     separator(2);
     Writeln('0. Return');
-    Writeln('1. Create unsorted array');
-    Writeln('2. Sort 1 x 100000');
-    Writeln('3. Sort 10 x 10000');
-    Writeln('4. Sort 100 x 1000');
-    Writeln('5. Sort 1000 x 100');
-    Writeln('6. Sort 10000 x 10');
-    Writeln('7. Show the array');
-    Writeln('8. Is sorted');
+    Writeln('1. Sort 1 x 100000');
+    Writeln('2. Sort 10 x 10000');
+    Writeln('3. Sort 100 x 1000');
+    Writeln('4. Sort 1000 x 100');
+    Writeln('5. Sort 10000 x 10');
+    Writeln('6. Show the array');
+    Writeln('7. Is sorted');
     separator(1);
     Write('Choice: ');
     Readln(mecv);
     separator(1);
-    step:= -1;
     case mecv of
     0: Break;
-    1:
-       begin
-         CreateFile(2,100000);
-         arr:= ArrGet(2,100000);
-         Writeln('[100000 elements initialized]');
-         separator(1);
-       end;
-    2: step:= 100000;
-    3: step:= 10000;
-    4: step:= 1000;
-    5: step:= 100;
-    6: step:= 10;
-    7: ShowArr(arr);
-    8: Writeln(IsSorted(1,arr));
+    1: CreateFile(2,1,100000);
+    2: CreateFile(2,10,10000);
+    3: CreateFile(2,100,1000);
+    4: CreateFile(2,1000,100);
+    5: CreateFile(2,10000,10);
+    6: if Length(arr) <> 0 then
+        ShowArr(arr)
+       else
+        Writeln('Empty array');
+    7: if Length(arr) <> 0 then
+        Writeln(IsSorted(1,arr))
+       else
+        Writeln('Empty array');
     end;
-    if (step <> -1) and (Length(arr) <> 0) then
+    if mecv in [1..5] then
     begin
-      starti:= 0;
-      starttime:= Now;
-      repeat
-        SortArr(tv,arr,starti,starti + step - 1);
-        starti:= starti + step;
-      until starti = 100000;
-      finishtime:= Now;
-      Writeln('Time spent to sort the array: ');
-      Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
-      WriteToFile(2,arr);
+      arr:= ArrGet(2,100000);
+      if Length(arr) <> 0 then
+      begin
+        starttime:= Now;
+        SortArr(tv,arr,0,High(arr));
+        finishtime:= Now;
+        Writeln('Time spent to sort the array: ');
+        Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
+      end;
     end;
   end;
 end;
@@ -408,10 +423,10 @@ begin
       cv:= -1;
       separator(2);
       Writeln('0. Exit');
-      Writeln('1. SelectionSort');
-      Writeln('2. InsertionsSort');
-      Writeln('3. BubbleSort');
-      Writeln('4. QuickSort');
+      Writeln('1. Selection sort');
+      Writeln('2. Insertions sort');
+      Writeln('3. Bubble sort');
+      Writeln('4. Quick sort');
       separator(1);
       Write('Choice: ');
       Readln(tv);
