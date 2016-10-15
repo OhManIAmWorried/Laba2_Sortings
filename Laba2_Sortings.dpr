@@ -13,6 +13,7 @@ type
 var
   dirCustom: string;
   dirExp: string;
+  f: TFileInt;
 
 procedure separator(cv: Integer);
 begin
@@ -42,16 +43,16 @@ begin
   Writeln;
 end;
 
-function NumberSet(): TArrInt;
+procedure CreateFile(cfcv: ShortInt; n: Integer);
 var
-  n,i,rand: Integer;
-  res: TArrInt;
   f: TFileInt;
+  i,rand: Integer;
 begin
-  AssignFile(f,dirCustom);
+  case cfcv of
+  1: AssignFile(f,dirCustom);
+  2: AssignFile(f,dirExp);
+  end;
   Rewrite(f);
-  write('The number of elements: ');
-  Readln(n);
   Randomize;
   for i:= 0 to n-1 do
   begin
@@ -61,6 +62,18 @@ begin
     Write(f,rand);
   end;
   CloseFile(f);
+end;
+
+function ArrGet(agcv: ShortInt; n: Integer): TArrInt;
+var
+  res: TArrInt;
+  i: Integer;
+  f: TFileInt;
+begin
+  case agcv of
+  1: AssignFile(f,dirCustom);
+  2: AssignFile(f,dirExp);
+  end;
   Reset(f);
   SetLength(res,n);
   for i:= 0 to n-1 do
@@ -69,14 +82,26 @@ begin
   Result:= res;
 end;
 
-function IsSorted(arr: TArrInt): Boolean;
+function NumberSet(): TArrInt;
+var
+  n,i,rand: Integer;
+  res: TArrInt;
+  f: TFileInt;
+begin
+  write('The number of elements: ');
+  Readln(n);
+  CreateFile(1,n);
+  result:= ArrGet(1,n);
+end;
+
+function IsSorted(iscv:ShortInt; arr: TArrInt): Boolean;
 var
   i: Integer;
   res: Boolean;
 begin
   res:= True;
   for i:=0 to Length(arr) - 2 do
-   if arr[i] < arr[i+1] then
+   if ((arr[i] < arr[i+1]) and (iscv = 1)) or ((arr[i] > arr[i+1]) and (iscv = 2)) then
    begin
      res:= False;
      Break;
@@ -84,12 +109,15 @@ begin
   result:= res;
 end;
 
-procedure WriteToFile(arr: TArrInt);
+procedure WriteToFile(wtf: ShortInt; arr: TArrInt);
 var
   i: Integer;
   f: TFileInt;
 begin
-  AssignFile(f,dirCustom);
+  case wtf of
+  1: AssignFile(f,dirCustom);
+  2: AssignFile(f,dirExp);
+  end;
   Rewrite(f);
   for i:= 0 to Length(arr) - 1 do
    Write(f,arr[i]);
@@ -146,7 +174,7 @@ begin
     end;
 end;
 
-procedure QuickSort(var arr: TArrInt; sl,sr: Integer);
+procedure QuickSort(qscv: ShortInt; var arr: TArrInt; sl,sr: Integer);
 var
   mid,l,r,tmp: Integer;
 begin
@@ -155,10 +183,22 @@ begin
   mid:= arr[l - ((l-r) div 2)];
   while l < r do
   begin
-    while (arr[l] > mid) do
-     Inc(l);
-    while (arr[r] < mid) do
-     Dec(r);
+    case qscv of
+    1:
+      begin
+        while (arr[l] > mid) do
+         Inc(l);
+        while (arr[r] < mid) do
+         Dec(r);
+      end;
+    2:
+      begin
+        while (arr[l] < mid) do
+         Inc(l);
+        while (arr[r] > mid) do
+         Dec(r);
+      end;
+    end;
     if (l <= r) then
     begin
       tmp:= arr[l];
@@ -169,48 +209,99 @@ begin
     end;
   end;
   if sr > l then
-   QuickSort(arr,l,sr);
+   QuickSort(qscv,arr,l,sr);
   if sl < r then
-   QuickSort(arr,sl,r);
+   QuickSort(qscv,arr,sl,r);
 end;
 
-procedure SortArr(tv: Integer; var arr: TArrInt);
+procedure SortPartlySorted();
 var
   starttime,finishtime: TDateTime;
+  n,starti,finishi: Integer;
+  arr: TArrInt;
 begin
-  case tv of
-  1:
-    begin
-      starttime:= Now;
-      SelectionSort(arr,0,High(arr));
-      finishtime:= Now;
-    end;
-  2:
-    begin
-      starttime:= Now;
-      InsertionSort(arr,0,High(arr));
-      finishtime:= Now;
-    end;
-  3:
-    begin
-      starttime:= Now;
-      BubbleSort(arr,0,High(arr));
-      finishtime:= Now;
-    end;
-  4:
-    begin
-      starttime:= Now;
-      QuickSort(arr,0,High(arr));
-      finishtime:= Now;
-    end;
-  end;
+  separator(1);
+  Write('Length of array: ');
+  Readln(n);
+  separator(1);
+  CreateFile(1,n);
+  arr:= ArrGet(1,n);
+  Writeln('Array created');
+  separator(1);
+  Writeln('ArraySorted = ',IsSorted(1,arr));
+  separator(1);
+  Writeln('i - index of the begining of a part');
+  Write('i: ');
+  Readln(starti);
+  Writeln('j - index of the end of a part');
+  Write('j: ');
+  Readln(finishi);
+  separator(1);
+  QuickSort(1,arr,starti,finishi);
+  Writeln('The part is sorted');
+  separator(1);
+  Writeln('Sorting the whole array');
+  starttime:= Now;
+  QuickSort(1,arr,0,High(arr));
+  finishtime:= Now;
+  separator(1);
+  Writeln('ArraySorted = ',IsSorted(1,arr));
+  separator(1);
   Writeln('Time spent to sort the array: ');
   Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
-  WriteToFile(arr);
+  WriteToFile(1,arr);
+end;
+
+procedure SortDecreasing();
+var
+  starttime,finishtime: TDateTime;
+  n: Integer;
+  arr: TArrInt;
+begin
+  separator(1);
+  Write('Length of array: ');
+  Readln(n);
+  CreateFile(1,n);
+  arr:= ArrGet(1,n);
+  Writeln('Array created');
+  separator(1);
+  Writeln('ArraySorted = ',IsSorted(1,arr));
+  separator(1);
+  Writeln('Sorting from max to min');
+  starttime:= Now;
+  QuickSort(1,arr,0,High(arr));
+  finishtime:= Now;
+  separator(1);
+  Writeln('ArraySorted = ',IsSorted(1,arr));
+  separator(1);
+  Writeln('Time spent to sort the array: ');
+  Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
+  separator(1);
+  Writeln('Sorting from min to max');
+  starttime:= Now;
+  QuickSort(2,arr,0,High(arr));
+  finishtime:= Now;
+  separator(1);
+  Writeln('ArraySorted = ',IsSorted(2,arr));
+  separator(1);
+  Writeln('Time spent to sort the array: ');
+  Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
+  WriteToFile(1,arr);
+end;
+
+procedure SortArr(tv: Integer; var arr: TArrInt; starti,finishi: Integer);
+begin
+  case tv of
+  1: SelectionSort(arr,starti,finishi);
+  2: InsertionSort(arr,starti,finishi);
+  3: BubbleSort(arr,starti,finishi);
+  4: QuickSort(1,arr,starti,finishi);
+  end;
 end;
 
 procedure menuCustom(tv: Integer);
 var
+  starttime,finishtime: TDateTime;
   cv: Integer;
   f: TFileInt;
   arr: TArrInt;
@@ -231,23 +322,83 @@ begin
      separator(1);
     case cv of
     0: Break;
-    1: arr:= NumberSet();      //identical for all the types
-    2: SortArr(tv,arr);
-    3: ShowArr(arr);            //identical for all the types
-    4: Writeln(IsSorted(arr));  //identical for all the types
+    1: arr:= NumberSet();
+    2:
+      begin
+        starttime:= Now;
+        SortArr(tv,arr,0,High(arr));
+        finishtime:= Now;
+        Writeln('Time spent to sort the array: ');
+        Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
+        WriteToFile(1,arr);
+      end;
+    3: ShowArr(arr);
+    4: Writeln(IsSorted(1,arr));
     end;
   end;
 end;
 
 procedure menuExperiments(tv: Integer);
+var
+  arr: TArrInt;
+  mecv: ShortInt;
+  step,starti: Integer;
+  starttime,finishtime: TDateTime;
 begin
-
+  while true do
+  begin
+    separator(2);
+    Writeln('0. Return');
+    Writeln('1. Create unsorted array');
+    Writeln('2. Sort 1 x 100000');
+    Writeln('3. Sort 10 x 10000');
+    Writeln('4. Sort 100 x 1000');
+    Writeln('5. Sort 1000 x 100');
+    Writeln('6. Sort 10000 x 10');
+    Writeln('7. Show the array');
+    Writeln('8. Is sorted');
+    separator(1);
+    Write('Choice: ');
+    Readln(mecv);
+    separator(1);
+    step:= -1;
+    case mecv of
+    0: Break;
+    1:
+       begin
+         CreateFile(2,100000);
+         arr:= ArrGet(2,100000);
+         Writeln('[100000 elements initialized]');
+         separator(1);
+       end;
+    2: step:= 100000;
+    3: step:= 10000;
+    4: step:= 1000;
+    5: step:= 100;
+    6: step:= 10;
+    7: ShowArr(arr);
+    8: Writeln(IsSorted(1,arr));
+    end;
+    if (step <> -1) and (Length(arr) <> 0) then
+    begin
+      starti:= 0;
+      starttime:= Now;
+      repeat
+        SortArr(tv,arr,starti,starti + step - 1);
+        starti:= starti + step;
+      until starti = 100000;
+      finishtime:= Now;
+      Writeln('Time spent to sort the array: ');
+      Writeln(FormatDateTime('hh:nn:ss:zzz',(finishtime - starttime)));
+      WriteToFile(2,arr);
+    end;
+  end;
 end;
 
 procedure menu();
 var
-  cv: Integer; //case variable
-  tv: Integer; //type variable
+  cv: ShortInt;
+  tv: ShortInt;
 begin
   tv:= -1;
   while True do
@@ -272,13 +423,22 @@ begin
       Writeln('0. Return');
       Writeln('1. Custom Amount of Elements');
       Writeln('2. Experiments');
+      if tv = 4 then
+      begin
+        Writeln('3. Sort partly-sorted array');
+        Writeln('4. Sort decreasing array');
+      end;
       separator(1);
       Write('Choice: ');
       Readln(cv);
       case cv of
-        0: tv:= -1;  //Not the solution I guess Q.Q
+        0: tv:= -1;
         1: menuCustom(tv);
         2: menuExperiments(tv);
+        3: if tv = 4 then
+            SortPartlySorted();
+        4: if tv = 4 then
+            SortDecreasing();
       end;
     end;
   end;
@@ -288,4 +448,6 @@ begin
   dirCustom:= 'C:\Users\Oly\Desktop\Algo\Laba\Laba_3Semestr\Laba2_Sortings\Custom.txt';
   dirExp:= 'C:\Users\Oly\Desktop\Algo\Laba\Laba_3Semestr\Laba2_Sortings\Experimental.txt';
   menu();
+  DeleteFile(dirCustom);
+  DeleteFile(dirExp);
 end.
