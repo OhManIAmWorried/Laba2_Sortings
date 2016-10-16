@@ -361,9 +361,10 @@ end;
 procedure menuExperiments(tv: Integer);
 var
   arr: TArrInt;
-  mecv: ShortInt;
+  mecv,sw: ShortInt;
   starttime,finishtime: TDateTime;
 begin
+  sw:= 0;
   while true do
   begin
     separator(2);
@@ -375,17 +376,38 @@ begin
     Writeln('5. Sort 10000 x 10');
     Writeln('6. Show the array');
     Writeln('7. Is sorted');
+    Writeln('8. Change sorting type');
     separator(1);
     Write('Choice: ');
     Readln(mecv);
     separator(1);
     case mecv of
     0: Break;
-    1: CreateFile(2,1,100000);
-    2: CreateFile(2,10,10000);
-    3: CreateFile(2,100,1000);
-    4: CreateFile(2,1000,100);
-    5: CreateFile(2,10000,10);
+    1: if sw <> 1 then
+       begin
+         CreateFile(2,1,100000);
+         sw:= 1;
+       end;
+    2: if sw <> 2 then
+       begin
+         CreateFile(2,10,10000);
+         sw:= 2;
+       end;
+    3: if sw <> 3 then
+       begin
+         CreateFile(2,100,1000);
+         sw:= 3;
+       end;
+    4: if sw <> 4 then
+       begin
+         CreateFile(2,1000,100);
+         sw:= 4;
+       end;
+    5: if sw <> 5 then
+       begin
+         CreateFile(2,10000,10);
+         sw:= 5;
+       end;
     6: if Length(arr) <> 0 then
         ShowArr(arr)
        else
@@ -394,6 +416,17 @@ begin
         Writeln(IsSorted(1,arr))
        else
         Writeln('Empty array');
+    8:
+       begin
+         separator(2);
+         Writeln('1. Selection sort');
+         Writeln('2. Insertion sort');
+         Writeln('3. Bubble sort');
+         Writeln('4. Quick sort');
+         separator(1);
+         Write('Choice: ');
+         Readln(tv);
+       end;
     end;
     if mecv in [1..5] then
     begin
